@@ -15,8 +15,41 @@ namespace TrueUnleveledSkyrim.Patch
     {
         private static ZoneList? ZonesByKeyword;
         private static ZoneList? ZonesByID;
+        private static ZoneKeywordMults? zonesKeywordMults;
 
-        private static void UnlevelZone(EncounterZone encZone, ZoneEntry zoneDefinition)
+        // Returns the level modifiers for the desired NPC based on their race.
+        private static void GetLevelMultiplier(EncounterZone encZone, ILinkCache linkCache, out short levelModAdd, out float levelModMult)
+        {
+            levelModAdd = 0;
+            levelModMult = 1f;
+            if (!encZone.Location.TryResolve<ILocationGetter>(linkCache, out ILocationGetter? resolvedLocation))
+                return;
+
+            Console.WriteLine(resolvedLocation.EditorID);
+
+            for (int i = zonesKeywordMults!.Data.Count - 1; i >= 0; i--)
+            {
+                ZoneKeywordMultEntry? zoneDefinition = zonesKeywordMults.Data[i];
+                foreach (var keywordEntry in resolvedLocation.Keywords.EmptyIfNull())
+                {
+                    if (!keywordEntry.TryResolve<IKeywordGetter>(linkCache, out IKeywordGetter? resolvedKeyword) || resolvedKeyword.EditorID is null)
+                        continue;
+                    
+                    if (i == 0)
+                        Console.WriteLine(resolvedKeyword.EditorID);
+                    
+                    if (zoneDefinition.Keys.Any(key => resolvedKeyword.EditorID.Equals(key, StringComparison.OrdinalIgnoreCase)) && !zoneDefinition.ForbiddenKeys.Any(key => resolvedKeyword.EditorID.Equals(key, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        levelModAdd += zoneDefinition.LevelModifierAdd ?? 0;
+                        levelModMult += zoneDefinition.LevelModifierMult ?? 0.0f;
+                        
+                    }
+                }
+            }
+            
+        }
+
+        private static void UnlevelZone(EncounterZone encZone, ZoneEntry zoneDefinition, ILinkCache linkCache)
         {
             encZone.Flags.SetFlag(EncounterZone.Flag.MatchPcBelowMinimumLevel, false);
             if(zoneDefinition.EnableCombatBoundary is not null)
@@ -40,6 +73,19 @@ namespace TrueUnleveledSkyrim.Patch
                     encZone.MaxLevel = (sbyte)(encZone.MinLevel + zoneDefinition.Range);
                 }
             }
+            GetLevelMultiplier(encZone, linkCache, out short levelModAdd, out float levelModMult);
+            int minLevel = (int)((float)(encZone.MinLevel + levelModAdd) * levelModMult);
+            if (minLevel < 0)
+                minLevel = 0;
+            else if (minLevel > 126)
+                minLevel = 126;
+            int maxLevel = (int)((float)(encZone.MaxLevel + levelModAdd) * levelModMult);
+            if (maxLevel < 0)
+                maxLevel = 0;
+            else if (maxLevel > 126)
+                maxLevel = 126;
+            encZone.MinLevel = (sbyte)minLevel;
+            encZone.MaxLevel = (sbyte)maxLevel;
         }
 
         private static bool PatchZonesByKeyword(EncounterZone encZone, ILinkCache linkCache)
@@ -57,7 +103,7 @@ namespace TrueUnleveledSkyrim.Patch
 
                     if (zoneDefinition.Keys.Any(key => resolvedKeyword.EditorID.Equals(key, StringComparison.OrdinalIgnoreCase)) && !zoneDefinition.ForbiddenKeys.Any(key => resolvedKeyword.EditorID.Equals(key, StringComparison.OrdinalIgnoreCase)))
                     {
-                        UnlevelZone(encZone, zoneDefinition);
+                        UnlevelZone(encZone, zoneDefinition, linkCache);
                         return true;
                     }
                 }
@@ -77,7 +123,7 @@ namespace TrueUnleveledSkyrim.Patch
 
                 if (zoneDefinition.Keys.Any(key => encZone.EditorID.Equals(key, StringComparison.OrdinalIgnoreCase)) && !zoneDefinition.ForbiddenKeys.Any(key => encZone.EditorID.Equals(key, StringComparison.OrdinalIgnoreCase)))
                 {
-                    UnlevelZone(encZone, zoneDefinition);
+                    UnlevelZone(encZone, zoneDefinition, Patcher.LinkCache);
                     return true;
                 }
             }
@@ -97,6 +143,8 @@ namespace TrueUnleveledSkyrim.Patch
                 ZonesByKeyword = JsonHelper.LoadConfig<ZoneList>(TUSConstants.ZoneTyesKeywordPath);
                 ZonesByID = JsonHelper.LoadConfig<ZoneList>(TUSConstants.ZoneTyesEDIDPath);
             }
+
+            zonesKeywordMults = JsonHelper.LoadConfig<ZoneKeywordMults>(TUSConstants.ZoneKeywordMultsPath);
 
             uint processedRecords = 0;
             var forbiddenCache = LoadOrder.Import<ISkyrimModGetter>(state.DataFolderPath, Patcher.ModSettings.Value.Zones.PluginFilter, GameRelease.SkyrimSE).PriorityOrder.ToImmutableLinkCache();

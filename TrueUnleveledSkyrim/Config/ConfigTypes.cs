@@ -103,4 +103,18 @@ namespace TrueUnleveledSkyrim.Config
     {
         [JsonProperty] public List<ZoneEntry> Zones { get; set; } = new();
     }
+
+    // zoneKeywordMults.json
+    public class ZoneKeywordMultEntry
+    {
+        [JsonProperty] public List<string> Keys { get; set; } = new();
+        [JsonProperty] public List<string> ForbiddenKeys { get; set; } = new();
+        [JsonProperty] public short? LevelModifierAdd { get; set; }
+        [JsonProperty] public float? LevelModifierMult { get; set; }
+    }
+
+    public class ZoneKeywordMults : ConfigType
+    {
+        [JsonProperty] public List<ZoneKeywordMultEntry> Data { get; set; } = new();
+    }
 }

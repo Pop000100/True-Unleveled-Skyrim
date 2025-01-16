@@ -1,0 +1,20 @@
+{
+    "Data": [
+      {
+        "Keys": [
+          "LocDiffEasy"
+        ],
+        "ForbiddenKeys": [],
+        "LevelModifierAdd": -3,
+		    "LevelModifierMult": 0.8
+      },
+	    {
+        "Keys": [
+          "LocDiffHard"
+        ],
+        "ForbiddenKeys": [],
+        "LevelModifierAdd": 5,
+		    "LevelModifierMult": 1.1
+      }
+    ]
+}

@@ -26,7 +26,7 @@ namespace TrueUnleveledSkyrim.Config
         public static string ZoneTyesEDIDMLUPath { get; set; } = "zoneTypesByEDIDMLU.json";
         public static string ZoneTyesKeywordPath { get; set; } = "zoneTypesByKeyword.json";
         public static string ZoneTyesKeywordMLUPath { get; set; } = "zoneTypesByKeywordMLU.json";
-
+        public static string ZoneKeywordMultsPath { get; set; } = "zoneKeywordMults.json";
         public static void GetPaths(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             ArtifactKeysPath = Path.Combine(state.ExtraSettingsDataPath!, ArtifactKeysPath);
@@ -41,6 +41,7 @@ namespace TrueUnleveledSkyrim.Config
             ZoneTyesEDIDMLUPath = Path.Combine(state.ExtraSettingsDataPath!, ZoneTyesEDIDMLUPath);
             ZoneTyesKeywordPath = Path.Combine(state.ExtraSettingsDataPath!, ZoneTyesKeywordPath);
             ZoneTyesKeywordMLUPath = Path.Combine(state.ExtraSettingsDataPath!, ZoneTyesKeywordMLUPath);
+            ZoneKeywordMultsPath = Path.Combine(state.ExtraSettingsDataPath!, ZoneKeywordMultsPath);
         }
 
     }
