@@ -53,20 +53,20 @@ namespace TrueUnleveledSkyrim.Patch
 
             if (Patcher.ModSettings.Value.Zones.StaticZoneLevels)
             {
-                encZone.MinLevel = (sbyte)Patcher.Randomizer.Next(zoneDefinition.MinLevel, zoneDefinition.MaxLevel);
+                encZone.MinLevel = (byte)Patcher.Randomizer.Next(zoneDefinition.MinLevel, zoneDefinition.MaxLevel);
                 encZone.MaxLevel = encZone.MinLevel;
             }
             else
             {
                 if (zoneDefinition.MaxLevel == 0)
                 {
-                    encZone.MinLevel = (sbyte)Patcher.Randomizer.Next(zoneDefinition.MinLevel, zoneDefinition.MinLevel + zoneDefinition.Range);
+                    encZone.MinLevel = (byte)Patcher.Randomizer.Next(zoneDefinition.MinLevel, zoneDefinition.MinLevel + zoneDefinition.Range);
                     encZone.MaxLevel = 0;
                 }
                 else
                 {
-                    encZone.MinLevel = (sbyte)Patcher.Randomizer.Next(zoneDefinition.MinLevel, zoneDefinition.MaxLevel - zoneDefinition.Range + 1);
-                    encZone.MaxLevel = (sbyte)(encZone.MinLevel + zoneDefinition.Range);
+                    encZone.MinLevel = (byte)Patcher.Randomizer.Next(zoneDefinition.MinLevel, zoneDefinition.MaxLevel - zoneDefinition.Range + 1);
+                    encZone.MaxLevel = (byte)(encZone.MinLevel + zoneDefinition.Range);
                 }
             }
             GetLevelMultiplier(encZone, linkCache, out short levelModAdd, out float levelModMult);
@@ -80,8 +80,8 @@ namespace TrueUnleveledSkyrim.Patch
                 maxLevel = 0;
             else if (maxLevel > 126)
                 maxLevel = 126;
-            encZone.MinLevel = (sbyte)minLevel;
-            encZone.MaxLevel = (sbyte)maxLevel;
+            encZone.MinLevel = (byte)minLevel;
+            encZone.MaxLevel = (byte)maxLevel;
         }
 
         private static bool PatchZonesByKeyword(EncounterZone encZone, ILinkCache linkCache)
