@@ -22,31 +22,27 @@ namespace TrueUnleveledSkyrim.Patch
         {
             levelModAdd = 0;
             levelModMult = 1f;
+
             if (!encZone.Location.TryResolve<ILocationGetter>(linkCache, out ILocationGetter? resolvedLocation))
                 return;
 
-            Console.WriteLine(resolvedLocation.EditorID);
+            var resolvedKeywordEditorIdSet = resolvedLocation.Keywords.EmptyIfNull()
+                .Select(keywordLink => keywordLink.TryResolve(linkCache))
+                .NotNull()
+                .Select(keyword => keyword.EditorID)
+                .NotNull()
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             for (int i = zonesKeywordMults!.Data.Count - 1; i >= 0; i--)
             {
                 ZoneKeywordMultEntry? zoneDefinition = zonesKeywordMults.Data[i];
-                foreach (var keywordEntry in resolvedLocation.Keywords.EmptyIfNull())
+                if (zoneDefinition.Keys.Any(resolvedKeywordEditorIdSet.Contains)
+                    && !zoneDefinition.ForbiddenKeys.Any(resolvedKeywordEditorIdSet.Contains))
                 {
-                    if (!keywordEntry.TryResolve<IKeywordGetter>(linkCache, out IKeywordGetter? resolvedKeyword) || resolvedKeyword.EditorID is null)
-                        continue;
-                    
-                    if (i == 0)
-                        Console.WriteLine(resolvedKeyword.EditorID);
-                    
-                    if (zoneDefinition.Keys.Any(key => resolvedKeyword.EditorID.Equals(key, StringComparison.OrdinalIgnoreCase)) && !zoneDefinition.ForbiddenKeys.Any(key => resolvedKeyword.EditorID.Equals(key, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        levelModAdd += zoneDefinition.LevelModifierAdd ?? 0;
-                        levelModMult += zoneDefinition.LevelModifierMult ?? 0.0f;
-                        
-                    }
+                    levelModAdd += zoneDefinition.LevelModifierAdd ?? 0;
+                    levelModMult += zoneDefinition.LevelModifierMult ?? 0.0f;
                 }
             }
-            
         }
 
         private static void UnlevelZone(EncounterZone encZone, ZoneEntry zoneDefinition, ILinkCache linkCache)

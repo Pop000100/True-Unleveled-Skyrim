@@ -39,12 +39,12 @@ namespace TrueUnleveledSkyrim.Patch
         {
             levelModAdd = 0;
             levelModMult = 1;
-            if (!npc.Race.TryResolve(linkCache, out var raceGetter) || raceGetter.EditorID is null)
+            if (!npc.Race.TryResolve(linkCache, out var resolvedRace) || resolvedRace.EditorID is null)
                 return;
 
             foreach (RaceEntries? raceEntry in raceModifiers!.Data)
             {
-                if (raceEntry.Keys.Any(key => raceGetter.EditorID.Contains(key)) && !raceEntry.ForbiddenKeys.Any(key => raceGetter.EditorID.Contains(key)))
+                if (raceEntry.Keys.Any(key => resolvedRace.EditorID.Contains(key)) && !raceEntry.ForbiddenKeys.Any(key => resolvedRace.EditorID.Contains(key)))
                 {
                     levelModAdd = raceEntry.LevelModifierAdd ?? 0;
                     levelModMult = raceEntry.LevelModifierMult ?? 1;
@@ -130,10 +130,13 @@ namespace TrueUnleveledSkyrim.Patch
             if(npc.Configuration.Level is NpcLevel npcLevel)
             {
                 string usedPostfix;
+                int maxLevel = Patcher.ModSettings.Value.Items.MaxItemLevel;
+                int minLevel = Patcher.ModSettings.Value.Items.MinItemLevel;
+                int midLevel = (int)Math.Floor((double)(maxLevel - minLevel) / 2.0);
                 if(Patcher.ModSettings.Value.Items.AllowMidTier)
-                    usedPostfix = npcLevel.Level < 13 ? TUSConstants.WeakPostfix : npcLevel.Level > 27 ? TUSConstants.StrongPostfix : "";
+                    usedPostfix = npcLevel.Level < midLevel ? TUSConstants.WeakPostfix : npcLevel.Level > maxLevel ? TUSConstants.StrongPostfix : "";
                 else
-                    usedPostfix = npcLevel.Level <= 27 ? TUSConstants.WeakPostfix : npcLevel.Level > 27 ? TUSConstants.StrongPostfix : "";
+                    usedPostfix = npcLevel.Level <= maxLevel ? TUSConstants.WeakPostfix : npcLevel.Level > maxLevel ? TUSConstants.StrongPostfix : "";
 
                 if (!usedPostfix.IsNullOrEmpty())
                 {
